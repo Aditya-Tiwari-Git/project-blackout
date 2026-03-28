@@ -1,0 +1,29 @@
+name: "power-grid-v1"
+version: "1.0.0"
+description: "High-stakes energy dispatching for critical infrastructure protection."
+entry_point: "env:PowerGridEnv"
+
+env_vars:
+  API_BASE_URL: ""
+  MODEL_NAME: ""
+  HF_TOKEN: ""
+
+tasks:
+  - id: easy
+    description: "High solar output, low demand, full battery. Keep hospital powered for all 10 steps."
+    scenario: easy
+    max_steps: 10
+    passing_threshold: 0.8
+
+  - id: medium
+    description: "Low solar, high demand, half battery. Balance discharge and load shedding to protect critical load."
+    scenario: medium
+    max_steps: 10
+    passing_threshold: 0.6
+
+  - id: hard
+    description: "Zero solar, grid failure, near-empty battery. Survive as long as possible on stored energy alone."
+    scenario: hard
+    max_steps: 10
+    passing_threshold: 0.3
+

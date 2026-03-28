@@ -1,0 +1,8 @@
+# Project Blackout — Python dependencies
+# Compatible with Python 3.12, 3.13, 3.14+
+fastapi>=0.110.0,<1.0.0
+uvicorn[standard]>=0.29.0,<1.0.0
+pydantic>=2.6.0,<3.0.0
+numpy>=2.1.0
+openai>=1.20.0,<2.0.0
+openenv-core>=0.1.0
