@@ -15,9 +15,9 @@ GET  /tasks               → list all available tasks
 import logging
 import sys
 import os
-from typing import Literal
+from typing import Literal, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -73,9 +73,10 @@ def health():
 
 
 @app.post("/reset", response_model=Observation)
-def reset_env(body: ResetRequest):
-    obs = _env.reset(scenario=body.scenario)
-    logger.info("Environment reset | scenario=%s", body.scenario)
+def reset_env(body: Optional[ResetRequest] = Body(default=None)):
+    scenario = body.scenario if body else "medium"
+    obs = _env.reset(scenario=scenario)
+    logger.info("Environment reset | scenario=%s", scenario)
     return obs
 
 
