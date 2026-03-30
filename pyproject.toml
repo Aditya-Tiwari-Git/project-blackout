@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project-blackout"
+version = "1.0.0"
+description = "High-stakes energy dispatching environment for critical infrastructure protection."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0,<1.0.0",
+    "uvicorn[standard]>=0.29.0,<1.0.0",
+    "pydantic>=2.6.0,<3.0.0",
+    "numpy>=2.1.0",
+    "openai>=1.20.0,<2.0.0",
+    "openenv-core>=0.1.0",
+]
+
+[project.scripts]
+start = "uvicorn main:app --host 0.0.0.0 --port 7860"
