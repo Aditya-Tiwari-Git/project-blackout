@@ -130,7 +130,7 @@ cd project-blackout
 pip install -r requirements.txt
 
 # Run the FastAPI server
-uvicorn main:app --host 0.0.0.0 --port 7860
+uvicorn server.app:app --host 0.0.0.0 --port 7860
 
 # In another terminal — test it
 curl http://localhost:7860/
