@@ -16,6 +16,7 @@ Usage:
 import json
 import logging
 import os
+import sys
 import argparse
 from typing import Optional
 
@@ -68,23 +69,25 @@ def build_prompt(obs: Observation) -> str:
 # LLM client setup
 # ---------------------------------------------------------------------------
 
-def get_client() -> OpenAI:
+def get_llm_config() -> tuple[Optional[OpenAI], Optional[str]]:
     api_base = os.environ.get("API_BASE_URL", "").strip()
     hf_token = os.environ.get("HF_TOKEN", "").strip()
-
-    if not api_base:
-        raise EnvironmentError("API_BASE_URL environment variable is not set.")
-    if not hf_token:
-        raise EnvironmentError("HF_TOKEN environment variable is not set.")
-
-    return OpenAI(base_url=api_base, api_key=hf_token)
-
-
-def get_model_name() -> str:
     model = os.environ.get("MODEL_NAME", "").strip()
-    if not model:
-        raise EnvironmentError("MODEL_NAME environment variable is not set.")
-    return model
+
+    missing = [name for name, value in [
+        ("API_BASE_URL", api_base),
+        ("HF_TOKEN", hf_token),
+        ("MODEL_NAME", model),
+    ] if not value]
+
+    if missing:
+        logger.warning(
+            "Missing environment variables (%s). Running fallback rule-based agent instead of LLM inference.",
+            ", ".join(missing),
+        )
+        return None, None
+
+    return OpenAI(base_url=api_base, api_key=hf_token), model
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +132,18 @@ def query_llm(client: OpenAI, model: str, prompt: str) -> Optional[Action]:
         return None
 
 
+def heuristic_agent(obs: Observation) -> Action:
+    """A simple fallback agent when LLM configuration is unavailable."""
+    if obs.solar_mw >= obs.demand_total:
+        return safe_noop()
+
+    discharge_amount = min(5.0, max(0.0, obs.demand_total - obs.solar_mw))
+    if obs.battery_soc > 0.20 and discharge_amount > 0.0:
+        return Action(dispatch_type=DispatchType.DISCHARGE, amount_mw=discharge_amount)
+
+    return Action(dispatch_type=DispatchType.SHED_RESIDENTIAL, amount_mw=discharge_amount)
+
+
 def safe_noop() -> Action:
     return Action(dispatch_type=DispatchType.NOOP, amount_mw=0.0)
 
@@ -138,8 +153,7 @@ def safe_noop() -> Action:
 # ---------------------------------------------------------------------------
 
 def run_inference(scenario: str = "medium") -> None:
-    client = get_client()
-    model = get_model_name()
+    client, model = get_llm_config()
 
     env = PowerGridEnv()
     obs = env.reset(scenario=scenario)
@@ -147,9 +161,14 @@ def run_inference(scenario: str = "medium") -> None:
 
     total_reward: float = 0.0
 
+    use_llm = client is not None and model is not None
+
     for step in range(1, MAX_STEPS + 1):
         prompt = build_prompt(obs)
-        action = query_llm(client, model, prompt) or safe_noop()
+        if use_llm:
+            action = query_llm(client, model, prompt) or safe_noop()
+        else:
+            action = heuristic_agent(obs)
 
         result = env.step(action)
         total_reward += result.reward.score
@@ -194,4 +213,13 @@ if __name__ == "__main__":
         help="Episode difficulty scenario (default: medium)",
     )
     args = parser.parse_args()
-    run_inference(scenario=args.scenario)
+
+    try:
+        run_inference(scenario=args.scenario)
+    except Exception as exc:
+        logger.exception("Inference failed with an unexpected error.")
+        print(
+            "ERROR: Inference failed. Please verify that API_BASE_URL, HF_TOKEN, and MODEL_NAME are set if you want LLM inference.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
