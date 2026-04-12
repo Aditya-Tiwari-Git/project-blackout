@@ -17,6 +17,7 @@ tasks:
     passing_threshold: 0.8
     run: "tasks.task_easy:run_task"
     grader: "tasks.task_easy:grade"
+    grade: "tasks.task_easy:grade"
 
   - id: medium
     description: "Low solar, high demand, half battery. Balance discharge and load shedding to protect critical load."
@@ -25,6 +26,7 @@ tasks:
     passing_threshold: 0.6
     run: "tasks.task_medium:run_task"
     grader: "tasks.task_medium:grade"
+    grade: "tasks.task_medium:grade"
 
   - id: hard
     description: "Zero solar, grid failure, near-empty battery. Survive as long as possible on stored energy alone."
@@ -33,3 +35,4 @@ tasks:
     passing_threshold: 0.3
     run: "tasks.task_hard:run_task"
     grader: "tasks.task_hard:grade"
+    grade: "tasks.task_hard:grade"
