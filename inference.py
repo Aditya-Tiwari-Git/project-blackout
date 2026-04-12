@@ -159,6 +159,8 @@ def run_inference(scenario: str = "medium") -> None:
     obs = env.reset(scenario=scenario)
     logger.info("Episode started | scenario=%s | initial obs=%s", scenario, obs)
 
+    print(f"[START] task=inference scenario={scenario}", flush=True)
+
     total_reward: float = 0.0
 
     use_llm = client is not None and model is not None
@@ -172,6 +174,12 @@ def run_inference(scenario: str = "medium") -> None:
 
         result = env.step(action)
         total_reward += result.reward.score
+
+        print(
+            f"[STEP] step={step} action={action.dispatch_type} amount={action.amount_mw:.2f} "
+            f"reward={result.reward.score:.4f} hospital={result.reward.is_hospital_powered} done={result.done}",
+            flush=True,
+        )
 
         logger.info(
             "Step %d/%d | action=%s %.2f MW | reward=%.4f | hospital=%s | done=%s",
@@ -191,6 +199,12 @@ def run_inference(scenario: str = "medium") -> None:
     # Grade the episode
     final_state = env.state()
     score = grade(final_state)
+
+    print(
+        f"[END] task=inference scenario={scenario} score={score:.4f} total_reward={total_reward:.4f} "
+        f"steps={step} co2_saved={final_state['total_co2_saved']:.4f}",
+        flush=True,
+    )
 
     print("\n" + "=" * 50)
     print(f"  Episode complete — {step} steps")
