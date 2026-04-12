@@ -3,13 +3,14 @@ inference.py — LLM-driven agent for Project Blackout: Microgrid Power Dispatch
 
 Environment variables (read from shell / .env):
     API_BASE_URL   Base URL for an OpenAI-compatible inference endpoint.
+    API_KEY        API key used by the injected LiteLLM proxy.
     MODEL_NAME     Model identifier to pass in the request.
-    HF_TOKEN       Bearer token (used as the API key).
+    HF_TOKEN       Optional fallback bearer token for local use.
 
 Usage:
     export API_BASE_URL="https://your-endpoint/v1"
+    export API_KEY="proxy-api-key"
     export MODEL_NAME="meta-llama/Llama-3-8b-instruct"
-    export HF_TOKEN="hf_..."
     python inference.py --scenario medium
 """
 
@@ -71,12 +72,15 @@ def build_prompt(obs: Observation) -> str:
 
 def get_llm_config() -> tuple[Optional[OpenAI], Optional[str]]:
     api_base = os.environ.get("API_BASE_URL", "").strip()
+    api_key = os.environ.get("API_KEY", "").strip()
     hf_token = os.environ.get("HF_TOKEN", "").strip()
     model = os.environ.get("MODEL_NAME", "").strip()
 
+    auth_key = api_key or hf_token
+
     missing = [name for name, value in [
         ("API_BASE_URL", api_base),
-        ("HF_TOKEN", hf_token),
+        ("API_KEY or HF_TOKEN", auth_key),
         ("MODEL_NAME", model),
     ] if not value]
 
@@ -87,7 +91,14 @@ def get_llm_config() -> tuple[Optional[OpenAI], Optional[str]]:
         )
         return None, None
 
-    return OpenAI(base_url=api_base, api_key=hf_token), model
+    if api_key and hf_token:
+        logger.info("Using API_KEY for inference proxy authentication.")
+    elif api_key:
+        logger.info("Using API_KEY for inference proxy authentication.")
+    else:
+        logger.info("Using HF_TOKEN fallback for authentication.")
+
+    return OpenAI(base_url=api_base, api_key=auth_key), model
 
 
 # ---------------------------------------------------------------------------
@@ -233,7 +244,7 @@ if __name__ == "__main__":
     except Exception as exc:
         logger.exception("Inference failed with an unexpected error.")
         print(
-            "ERROR: Inference failed. Please verify that API_BASE_URL, HF_TOKEN, and MODEL_NAME are set if you want LLM inference.",
+            "ERROR: Inference failed. Please verify that API_BASE_URL, API_KEY (or HF_TOKEN), and MODEL_NAME are set if you want LLM inference.",
             file=sys.stderr,
         )
         sys.exit(1)

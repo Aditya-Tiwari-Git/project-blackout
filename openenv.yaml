@@ -5,6 +5,7 @@ entry_point: "env:PowerGridEnv"
 
 env_vars:
   API_BASE_URL: ""
+  API_KEY: ""
   MODEL_NAME: ""
   HF_TOKEN: ""
 
@@ -26,4 +27,3 @@ tasks:
     scenario: hard
     max_steps: 10
     passing_threshold: 0.3
-

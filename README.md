@@ -220,11 +220,12 @@ project-blackout/
 
 ## ⚙️ Environment Variables
 
-| Variable       | Description                             |
-| -------------- | --------------------------------------- |
-| `API_BASE_URL` | OpenAI-compatible API base URL          |
-| `MODEL_NAME`   | Model identifier for inference          |
-| `HF_TOKEN`     | Hugging Face / API authentication token |
+| Variable       | Description                            |
+| -------------- | -------------------------------------- |
+| `API_BASE_URL` | OpenAI-compatible API base URL         |
+| `API_KEY`      | API key for the injected LiteLLM proxy |
+| `MODEL_NAME`   | Model identifier for inference         |
+| `HF_TOKEN`     | Optional fallback authentication token |
 
 ---
 
