@@ -151,8 +151,8 @@ curl http://localhost:7860/
 
 ```bash
 export API_BASE_URL="https://your-endpoint/v1"
-export MODEL_NAME="meta-llama/Llama-3-8b-instruct"
-export HF_TOKEN="hf_..."
+export API_KEY="your-api-key"
+export MODEL_NAME="meta-llama/Llama-3-8b-instruct"  # optional if the proxy supports a default model
 
 python inference.py --scenario easy
 python inference.py --scenario medium

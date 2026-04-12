@@ -74,14 +74,13 @@ def get_llm_config() -> tuple[Optional[OpenAI], Optional[str]]:
     api_base = os.environ.get("API_BASE_URL", "").strip()
     api_key = os.environ.get("API_KEY", "").strip()
     hf_token = os.environ.get("HF_TOKEN", "").strip()
-    model = os.environ.get("MODEL_NAME", "").strip()
+    model = os.environ.get("MODEL_NAME", "").strip() or os.environ.get("OPENAI_MODEL", "gpt-4o-mini").strip()
 
     auth_key = api_key or hf_token
 
     missing = [name for name, value in [
         ("API_BASE_URL", api_base),
         ("API_KEY or HF_TOKEN", auth_key),
-        ("MODEL_NAME", model),
     ] if not value]
 
     if missing:
@@ -91,13 +90,12 @@ def get_llm_config() -> tuple[Optional[OpenAI], Optional[str]]:
         )
         return None, None
 
-    if api_key and hf_token:
-        logger.info("Using API_KEY for inference proxy authentication.")
-    elif api_key:
+    if api_key:
         logger.info("Using API_KEY for inference proxy authentication.")
     else:
         logger.info("Using HF_TOKEN fallback for authentication.")
 
+    logger.info("Using model %s for LLM inference.", model)
     return OpenAI(base_url=api_base, api_key=auth_key), model
 
 
